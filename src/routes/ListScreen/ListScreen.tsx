@@ -1,30 +1,56 @@
 import React, { useState } from "react";
 
+type TodoType = { id: string; text: string };
+
 const ListScreen = () => {
-  const [todoList, setTodoList] = useState<
-    { id: string; text: string; active: boolean }[]
-  >([
-    { id: "0", text: "리스트 1", active: false },
-    { id: "1", text: "리스트 리스트 2", active: false },
-    { id: "2", text: "리스트 리스트 리스트 3", active: false },
-    { id: "3", text: "리스트 리스트 리스트 리스트 4", active: false },
+  const [todoList, setTodoList] = useState<TodoType[]>([
+    { id: "todo0", text: "리스트 1" },
+    { id: "todo1", text: "리스트 리스트 2" },
+    { id: "todo2", text: "리스트 리스트 리스트 3" },
+    { id: "todo3", text: "리스트 리스트 리스트 리스트 4" },
   ]);
 
-  function handleCheck(id: string, active: boolean) {
-    setTodoList((prev) => {
-      return prev.map((row) => {
-        if (row.id === id) {
-          return { ...row, active };
-        }
-        return row;
-      });
-    });
+  const [compliteList, setCompliteList] = useState<TodoType[]>([
+    { id: "complite0", text: "완료 리스트 1" },
+    { id: "complite1", text: "완료 리스트 리스트 2" },
+    { id: "complite2", text: "완료 리스트 리스트 리스트 3" },
+    { id: "complite3", text: "완료 리스트 리스트 리스트 리스트 4" },
+  ]);
+
+  function handleCheck(id: string) {
+    const row = todoList.find((row) => row.id === id);
+    if (!row) return;
+
+    handleRemoveTodo(id);
+    handleAppendComplite(row);
   }
 
-  function handleRemove(id: string) {
+  function handleAppendTodo(row: TodoType) {
+    setTodoList((prev) => [{ ...row, active: false }, ...prev]);
+  }
+
+  function handleAppendComplite(row: TodoType) {
+    setCompliteList((prev) => [row, ...prev]);
+  }
+
+  function handleRemoveTodo(id: string) {
     setTodoList((prev) => {
       return prev.filter((row) => row.id !== id);
     });
+  }
+
+  function handleRemoveComplite(id: string) {
+    setCompliteList((prev) => {
+      return prev.filter((row) => row.id !== id);
+    });
+  }
+
+  function handleRollback(id: string) {
+    const row = compliteList.find((row) => row.id === id);
+    if (!row) return;
+
+    handleRemoveComplite(id);
+    handleAppendTodo({ ...row });
   }
 
   const TodoListTitle = (props: { text: string }) => {
@@ -57,12 +83,11 @@ const ListScreen = () => {
               <TodoRow
                 key={row.id}
                 text={row.text}
-                active={row.active}
                 onCheck={(active) => {
-                  handleCheck(row.id, active);
+                  handleCheck(row.id);
                 }}
                 onRemove={() => {
-                  handleRemove(row.id);
+                  handleRemoveTodo(row.id);
                 }}
               />
             );
@@ -70,13 +95,16 @@ const ListScreen = () => {
         </div>
         <div>
           <TodoListTitle text="완료된 일" />
-          {todoList.map((row) => {
+          {compliteList.map((row) => {
             return (
               <CompliteRow
                 key={row.id}
                 text={row.text}
                 onRemove={() => {
-                  handleRemove(row.id);
+                  handleRemoveComplite(row.id);
+                }}
+                onTodo={() => {
+                  handleRollback(row.id);
                 }}
               />
             );
@@ -119,7 +147,7 @@ const CheckBox = (props: {
 
 const TodoRow = (props: {
   text: string;
-  active: boolean;
+  active?: boolean;
   onCheck?: (active: boolean) => void;
   onRemove?: () => void;
 }) => {
@@ -148,8 +176,12 @@ const TodoRow = (props: {
   );
 };
 
-const CompliteRow = (props: { text: string; onRemove?: () => void }) => {
-  const { text, onRemove } = props;
+const CompliteRow = (props: {
+  text: string;
+  onRemove?: () => void;
+  onTodo?: () => void;
+}) => {
+  const { text, onRemove, onTodo } = props;
 
   return (
     <div
@@ -169,6 +201,8 @@ const CompliteRow = (props: { text: string; onRemove?: () => void }) => {
         </div>
       </div>
       <CustomButton text={"삭제하기"} onPress={onRemove} />
+      <div style={{ width: 8 }} />
+      <CustomButton text={"원복"} onPress={onTodo} />
     </div>
   );
 };
