@@ -1,36 +1,125 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-type TodoType = { id: string; text: string };
+type TodoType = { id: string; title: string; subtitle: string };
+type BackTodoType = {
+  id: number;
+  title: string;
+  description: string;
+  isComplete: boolean;
+  isDel: boolean;
+};
 
 const ListScreen = () => {
-  const [todoList, setTodoList] = useState<TodoType[]>([
-    { id: "todo0", text: "리스트 1" },
-    { id: "todo1", text: "리스트 리스트 2" },
-    { id: "todo2", text: "리스트 리스트 리스트 3" },
-    { id: "todo3", text: "리스트 리스트 리스트 리스트 4" },
-  ]);
-
-  const [compliteList, setCompliteList] = useState<TodoType[]>([
-    { id: "complite0", text: "완료 리스트 1" },
-    { id: "complite1", text: "완료 리스트 리스트 2" },
-    { id: "complite2", text: "완료 리스트 리스트 리스트 3" },
-    { id: "complite3", text: "완료 리스트 리스트 리스트 리스트 4" },
-  ]);
+  const [todoList, setTodoList] = useState<TodoType[]>([]);
+  const [compliteList, setCompliteList] = useState<TodoType[]>([]);
 
   const [inputTodo, setInputTodo] = useState("");
 
-  function handleCheck(id: string) {
+  useEffect(() => {
+    setTotalTodoList();
+  }, []);
+
+  async function setTotalTodoList() {
+    const list = await getTodoList();
+    classificationList(list);
+  }
+
+  async function getTodoList() {
+    const { data } = await axios.get<{ data: BackTodoType[] }>("/api/todos");
+
+    return data.data;
+  }
+
+  async function addTodo(title: string, subtitle?: string) {
+    const { data: id } = await axios.post<number>("/api/todos", {
+      title,
+      subtitle,
+    });
+    return "" + id;
+  }
+
+  async function removeTodo(todoId: string) {
+    const { data: id } = await axios.delete<number>(`/api/todos/${todoId}`);
+    return "" + id;
+  }
+
+  async function compliteTodo(todo: TodoType) {
+    const newTodo: Omit<BackTodoType, "id"> = {
+      title: todo.title,
+      description: todo.subtitle,
+      isComplete: true,
+      isDel: false,
+    };
+    const { data: id } = await axios.put<number>(
+      `/api/todos/${todo.id}`,
+      newTodo
+    );
+
+    return "" + id;
+  }
+
+  async function rollbackTodo(todo: TodoType) {
+    const newTodo: Omit<BackTodoType, "id"> = {
+      title: todo.title,
+      description: todo.subtitle,
+      isComplete: false,
+      isDel: false,
+    };
+    const { data: id } = await axios.put<number>(
+      `/api/todos/${todo.id}`,
+      newTodo
+    );
+
+    return "" + id;
+  }
+
+  function classificationList(list: BackTodoType[]) {
+    let todo: TodoType[] = [];
+    let complite: TodoType[] = [];
+
+    list.forEach((row) => {
+      if (row.isDel) {
+        return;
+      }
+
+      if (row.isComplete) {
+        complite.push({
+          id: "" + row.id,
+          title: row.title,
+          subtitle: row.description,
+        });
+        return;
+      }
+
+      todo.push({
+        id: "" + row.id,
+        title: row.title,
+        subtitle: row.description,
+      });
+    });
+
+    setTodoList(todo);
+    setCompliteList(complite);
+  }
+
+  async function handleCheck(id: string) {
     const row = todoList.find((row) => row.id === id);
     if (!row) return;
 
-    handleRemoveTodo(id);
+    const compliteId = await compliteTodo(row);
+    if (!compliteId) return;
+
     handleAppendComplite(row);
+    deleteTodo(compliteId);
   }
 
-  function handleAddTodo(text: string) {
+  async function handleAddTodo(title: string, subtitle?: string) {
+    const id = await addTodo(title, subtitle);
     handleAppendTodo({
-      id: "" + (todoList.length + compliteList.length),
-      text,
+      id,
+      title,
+      subtitle: subtitle ?? "",
     });
     setInputTodo("");
   }
@@ -43,24 +132,37 @@ const ListScreen = () => {
     setCompliteList((prev) => [row, ...prev]);
   }
 
-  function handleRemoveTodo(id: string) {
+  async function handleRemoveTodo(id: string) {
+    const removeId = await removeTodo(id);
+    deleteTodo(removeId);
+  }
+
+  function deleteTodo(id: string) {
     setTodoList((prev) => {
       return prev.filter((row) => row.id !== id);
     });
   }
 
-  function handleRemoveComplite(id: string) {
+  async function handleRemoveComplite(id: string) {
+    const removeId = await removeTodo(id);
+    deleteCompliteTodo(removeId);
+  }
+
+  function deleteCompliteTodo(id: string) {
     setCompliteList((prev) => {
       return prev.filter((row) => row.id !== id);
     });
   }
 
-  function handleRollback(id: string) {
+  async function handleRollback(id: string) {
     const row = compliteList.find((row) => row.id === id);
     if (!row) return;
 
-    handleRemoveComplite(id);
-    handleAppendTodo({ ...row });
+    const rollbackId = await rollbackTodo(row);
+    if (!rollbackId) return;
+
+    handleAppendTodo(row);
+    deleteCompliteTodo(rollbackId);
   }
 
   const TodoListTitle = (props: { text: string }) => {
@@ -105,7 +207,7 @@ const ListScreen = () => {
             return (
               <TodoRow
                 key={row.id}
-                text={row.text}
+                text={row.title}
                 onCheck={(active) => {
                   handleCheck(row.id);
                 }}
@@ -122,7 +224,7 @@ const ListScreen = () => {
             return (
               <CompliteRow
                 key={row.id}
-                text={row.text}
+                text={row.title}
                 onRemove={() => {
                   handleRemoveComplite(row.id);
                 }}
