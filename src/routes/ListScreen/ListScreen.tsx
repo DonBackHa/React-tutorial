@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import {
+  getTodoList,
+  addTodo,
+  removeTodo,
+  updateTodo,
+} from "../../service/todoAPIService";
 
 type TodoType = { id: string; title: string; subtitle: string };
-type BackTodoType = {
-  id: number;
-  title: string;
-  description: string;
-  isComplete: boolean;
-  isDel: boolean;
-};
 
 const ListScreen = () => {
   const [todoList, setTodoList] = useState<TodoType[]>([]);
@@ -21,63 +19,10 @@ const ListScreen = () => {
   }, []);
 
   async function setTotalTodoList() {
-    const list = await getTodoList();
-    classificationList(list);
-  }
-
-  async function getTodoList() {
-    const { data } = await axios.get<{ data: BackTodoType[] }>("/api/todos");
-
-    return data.data;
-  }
-
-  async function addTodo(title: string, subtitle?: string) {
-    const { data: id } = await axios.post<number>("/api/todos", {
-      title,
-      subtitle,
-    });
-    return "" + id;
-  }
-
-  async function removeTodo(todoId: string) {
-    const { data: id } = await axios.delete<number>(`/api/todos/${todoId}`);
-    return "" + id;
-  }
-
-  async function compliteTodo(todo: TodoType) {
-    const newTodo: Omit<BackTodoType, "id"> = {
-      title: todo.title,
-      description: todo.subtitle,
-      isComplete: true,
-      isDel: false,
-    };
-    const { data: id } = await axios.put<number>(
-      `/api/todos/${todo.id}`,
-      newTodo
-    );
-
-    return "" + id;
-  }
-
-  async function rollbackTodo(todo: TodoType) {
-    const newTodo: Omit<BackTodoType, "id"> = {
-      title: todo.title,
-      description: todo.subtitle,
-      isComplete: false,
-      isDel: false,
-    };
-    const { data: id } = await axios.put<number>(
-      `/api/todos/${todo.id}`,
-      newTodo
-    );
-
-    return "" + id;
-  }
-
-  function classificationList(list: BackTodoType[]) {
     let todo: TodoType[] = [];
     let complite: TodoType[] = [];
 
+    const list = await getTodoList();
     list.forEach((row) => {
       if (row.isDel) {
         return;
@@ -101,6 +46,18 @@ const ListScreen = () => {
 
     setTodoList(todo);
     setCompliteList(complite);
+  }
+
+  async function compliteTodo(todo: TodoType) {
+    const { id, title, subtitle } = todo;
+    const updateId = await updateTodo(id, title, subtitle, true, false);
+    return "" + updateId;
+  }
+
+  async function rollbackTodo(todo: TodoType) {
+    const { id, title, subtitle } = todo;
+    const updateId = await updateTodo(id, title, subtitle, false, false);
+    return "" + updateId;
   }
 
   async function handleCheck(id: string) {
