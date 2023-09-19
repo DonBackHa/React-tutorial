@@ -17,12 +17,22 @@ const ListScreen = () => {
     { id: "complite3", text: "완료 리스트 리스트 리스트 리스트 4" },
   ]);
 
+  const [inputTodo, setInputTodo] = useState("");
+
   function handleCheck(id: string) {
     const row = todoList.find((row) => row.id === id);
     if (!row) return;
 
     handleRemoveTodo(id);
     handleAppendComplite(row);
+  }
+
+  function handleAddTodo(text: string) {
+    handleAppendTodo({
+      id: "" + (todoList.length + compliteList.length),
+      text,
+    });
+    setInputTodo("");
   }
 
   function handleAppendTodo(row: TodoType) {
@@ -75,6 +85,19 @@ const ListScreen = () => {
         alignItems: "center",
       }}
     >
+      <div style={{ marginTop: 100 }}>
+        <TodoListTitle text="입력" />
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <input
+            value={inputTodo}
+            onChange={(e) => setInputTodo(e.target.value)}
+          />
+          <CustomButton
+            text={"추가하기"}
+            onPress={() => handleAddTodo(inputTodo)}
+          />
+        </div>
+      </div>
       <div style={{ display: "flex", flexDirection: "row" }}>
         <div>
           <TodoListTitle text="해야하는 일" />
