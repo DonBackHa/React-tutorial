@@ -5,122 +5,27 @@ import {
   removeTodo,
   updateTodo,
 } from "../../service/todoAPIService";
+import { TodoType } from "./ListScreen.container";
 
-type TodoType = { id: string; title: string; subtitle: string };
+interface ListScreenProps {
+  inCompeleteList: TodoType[];
+  compeleteList: TodoType[];
+  onAdd?: (title: string, subtitle?: string) => void;
+  onRemove?: (type: "incomplete" | "complete", todo: TodoType) => void;
+  onComplete?: (todo: TodoType) => void;
+  onIncomplete?: (todo: TodoType) => void;
+}
 
-const ListScreen = () => {
-  const [todoList, setTodoList] = useState<TodoType[]>([]);
-  const [compliteList, setCompliteList] = useState<TodoType[]>([]);
-
+const ListScreen = (props: ListScreenProps) => {
+  const {
+    inCompeleteList,
+    compeleteList,
+    onAdd,
+    onComplete,
+    onIncomplete,
+    onRemove,
+  } = props;
   const [inputTodo, setInputTodo] = useState("");
-
-  useEffect(() => {
-    setTotalTodoList();
-  }, []);
-
-  async function setTotalTodoList() {
-    let todo: TodoType[] = [];
-    let complite: TodoType[] = [];
-
-    const list = await getTodoList();
-    list.forEach((row) => {
-      if (row.isDel) {
-        return;
-      }
-
-      if (row.isComplete) {
-        complite.push({
-          id: "" + row.id,
-          title: row.title,
-          subtitle: row.description,
-        });
-        return;
-      }
-
-      todo.push({
-        id: "" + row.id,
-        title: row.title,
-        subtitle: row.description,
-      });
-    });
-
-    setTodoList(todo);
-    setCompliteList(complite);
-  }
-
-  async function compliteTodo(todo: TodoType) {
-    const { id, title, subtitle } = todo;
-    const updateId = await updateTodo(id, title, subtitle, true, false);
-    return "" + updateId;
-  }
-
-  async function rollbackTodo(todo: TodoType) {
-    const { id, title, subtitle } = todo;
-    const updateId = await updateTodo(id, title, subtitle, false, false);
-    return "" + updateId;
-  }
-
-  async function handleCheck(id: string) {
-    const row = todoList.find((row) => row.id === id);
-    if (!row) return;
-
-    const compliteId = await compliteTodo(row);
-    if (!compliteId) return;
-
-    handleAppendComplite(row);
-    deleteTodo(compliteId);
-  }
-
-  async function handleAddTodo(title: string, subtitle?: string) {
-    const id = await addTodo(title, subtitle);
-    handleAppendTodo({
-      id,
-      title,
-      subtitle: subtitle ?? "",
-    });
-    setInputTodo("");
-  }
-
-  function handleAppendTodo(row: TodoType) {
-    setTodoList((prev) => [{ ...row, active: false }, ...prev]);
-  }
-
-  function handleAppendComplite(row: TodoType) {
-    setCompliteList((prev) => [row, ...prev]);
-  }
-
-  async function handleRemoveTodo(id: string) {
-    const removeId = await removeTodo(id);
-    deleteTodo(removeId);
-  }
-
-  function deleteTodo(id: string) {
-    setTodoList((prev) => {
-      return prev.filter((row) => row.id !== id);
-    });
-  }
-
-  async function handleRemoveComplite(id: string) {
-    const removeId = await removeTodo(id);
-    deleteCompliteTodo(removeId);
-  }
-
-  function deleteCompliteTodo(id: string) {
-    setCompliteList((prev) => {
-      return prev.filter((row) => row.id !== id);
-    });
-  }
-
-  async function handleRollback(id: string) {
-    const row = compliteList.find((row) => row.id === id);
-    if (!row) return;
-
-    const rollbackId = await rollbackTodo(row);
-    if (!rollbackId) return;
-
-    handleAppendTodo(row);
-    deleteCompliteTodo(rollbackId);
-  }
 
   const TodoListTitle = (props: { text: string }) => {
     return (
@@ -153,23 +58,26 @@ const ListScreen = () => {
           />
           <CustomButton
             text={"추가하기"}
-            onPress={() => handleAddTodo(inputTodo)}
+            onPress={() => {
+              onAdd?.(inputTodo);
+              setInputTodo("");
+            }}
           />
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "row" }}>
         <div>
           <TodoListTitle text="해야하는 일" />
-          {todoList.map((row) => {
+          {inCompeleteList.map((row) => {
             return (
               <TodoRow
                 key={row.id}
                 text={row.title}
                 onCheck={(active) => {
-                  handleCheck(row.id);
+                  onComplete?.(row);
                 }}
                 onRemove={() => {
-                  handleRemoveTodo(row.id);
+                  onRemove?.("incomplete", row);
                 }}
               />
             );
@@ -177,16 +85,16 @@ const ListScreen = () => {
         </div>
         <div>
           <TodoListTitle text="완료된 일" />
-          {compliteList.map((row) => {
+          {compeleteList.map((row) => {
             return (
               <CompliteRow
                 key={row.id}
                 text={row.title}
                 onRemove={() => {
-                  handleRemoveComplite(row.id);
+                  onRemove?.("complete", row);
                 }}
                 onTodo={() => {
-                  handleRollback(row.id);
+                  onIncomplete?.(row);
                 }}
               />
             );
