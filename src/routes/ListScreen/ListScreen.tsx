@@ -1,11 +1,6 @@
-import React, { useEffect, useState } from "react";
-import {
-  getTodoList,
-  addTodo,
-  removeTodo,
-  updateTodo,
-} from "../../service/todoAPIService";
+import React, { useState } from "react";
 import { TodoType } from "./ListScreen.container";
+import { TodoButton, TodoCheckBox, TodoTitle } from "./component";
 
 interface ListScreenProps {
   inCompeleteList: TodoType[];
@@ -27,20 +22,6 @@ const ListScreen = (props: ListScreenProps) => {
   } = props;
   const [inputTodo, setInputTodo] = useState("");
 
-  const TodoListTitle = (props: { text: string }) => {
-    return (
-      <div
-        style={{
-          fontSize: 32,
-          fontWeight: "700",
-          textAlign: "center",
-        }}
-      >
-        {props.text}
-      </div>
-    );
-  };
-
   return (
     <div
       style={{
@@ -50,13 +31,13 @@ const ListScreen = (props: ListScreenProps) => {
       }}
     >
       <div style={{ marginTop: 100 }}>
-        <TodoListTitle text="입력" />
+        <TodoTitle text="입력" />
         <div style={{ display: "flex", flexDirection: "row" }}>
           <input
             value={inputTodo}
             onChange={(e) => setInputTodo(e.target.value)}
           />
-          <CustomButton
+          <TodoButton
             text={"추가하기"}
             onPress={() => {
               onAdd?.(inputTodo);
@@ -67,7 +48,7 @@ const ListScreen = (props: ListScreenProps) => {
       </div>
       <div style={{ display: "flex", flexDirection: "row" }}>
         <div>
-          <TodoListTitle text="해야하는 일" />
+          <TodoTitle text="해야하는 일" />
           {inCompeleteList.map((row) => {
             return (
               <TodoRow
@@ -84,7 +65,7 @@ const ListScreen = (props: ListScreenProps) => {
           })}
         </div>
         <div>
-          <TodoListTitle text="완료된 일" />
+          <TodoTitle text="완료된 일" />
           {compeleteList.map((row) => {
             return (
               <CompliteRow
@@ -102,36 +83,6 @@ const ListScreen = (props: ListScreenProps) => {
         </div>
       </div>
     </div>
-  );
-};
-
-const CustomButton = (props: { text: string; onPress?: () => void }) => {
-  const { text, onPress } = props;
-  return (
-    <div>
-      <button onClick={onPress} style={{ fontSize: 16 }}>
-        {text}
-      </button>
-    </div>
-  );
-};
-
-const CheckBox = (props: {
-  active?: boolean;
-  onCheck?: (actinve: boolean) => void;
-}) => {
-  const [active, setActive] = useState(props.active);
-
-  return (
-    <input
-      type="checkbox"
-      checked={active}
-      onChange={({ target: { checked } }) => {
-        setActive(checked);
-        props.onCheck?.(checked);
-      }}
-      style={{ width: 24, height: 24 }}
-    />
   );
 };
 
@@ -156,12 +107,12 @@ const TodoRow = (props: {
       }}
     >
       <div style={{ display: "flex", flex: 1, flexDirection: "row" }}>
-        <CheckBox active={active} onCheck={onCheck} />
+        <TodoCheckBox active={active} onCheck={onCheck} />
         <div style={{ marginLeft: 16, marginRight: 16, fontSize: 24 }}>
           {text}
         </div>
       </div>
-      <CustomButton text={"삭제하기"} onPress={onRemove} />
+      <TodoButton text={"삭제하기"} onPress={onRemove} />
     </div>
   );
 };
@@ -190,9 +141,9 @@ const CompliteRow = (props: {
           {text}
         </div>
       </div>
-      <CustomButton text={"삭제하기"} onPress={onRemove} />
+      <TodoButton text={"삭제하기"} onPress={onRemove} />
       <div style={{ width: 8 }} />
-      <CustomButton text={"원복"} onPress={onTodo} />
+      <TodoButton text={"원복"} onPress={onTodo} />
     </div>
   );
 };
