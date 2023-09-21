@@ -1,4 +1,5 @@
 import axios from "axios";
+import { TodoType } from "../routes/ListScreen/ListScreen.container";
 
 export type BackTodoType = {
   id: number;
@@ -31,19 +32,16 @@ export async function removeTodo(todoId: string) {
 }
 
 /** @description Todo 변경한다 */
-export async function updateTodo(
-  todoId: string,
-  title: string,
-  description: string,
-  isComplete: boolean,
-  isDel: boolean
-) {
+export async function updateTodo(todo: TodoType, isComplete: boolean) {
   const newTodo: Omit<BackTodoType, "id"> = {
-    title,
-    description,
-    isComplete,
-    isDel,
+    title: todo.title,
+    description: todo.subtitle,
+    isComplete: isComplete,
+    isDel: false,
   };
-  const { data: id } = await axios.put<number>(`/api/todos/${todoId}`, newTodo);
+  const { data: id } = await axios.put<number>(
+    `/api/todos/${todo.id}`,
+    newTodo
+  );
   return "" + id;
 }

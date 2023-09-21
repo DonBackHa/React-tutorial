@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { TodoButton, TodoCheckBox, TodoTitle } from "../ListScreen/component";
+import React, { useEffect, useState } from "react";
+import { TodoButton, TodoTitle } from "../ListScreen/component";
 import { CompliteRow, TodoRow } from "../ListScreen/ListScreen";
 import { TodoType } from "../ListScreen/ListScreen.container";
 import { BackTodoType } from "../../service/todoAPIService";
@@ -8,6 +8,10 @@ const Skeleton = () => {
   const [inCompeleteList, setInCompeleteList] = useState<TodoType[]>([]);
   const [compeleteList, setCompeleteList] = useState<TodoType[]>([]);
   const [inputTodo, setInputTodo] = useState("");
+
+  useEffect(() => {
+    getAndSetList();
+  }, []);
 
   async function getAndSetList() {
     // TODO : 데이터를 불러와서 미완료, 완료로 분리 한다.

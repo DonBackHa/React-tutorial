@@ -50,7 +50,7 @@ const ListScreenContainer = () => {
   /** @description 완료 처리하기 */
   async function completeTodo(todo: TodoType) {
     const { id, title, subtitle } = todo;
-    const updateId = await updateTodo(id, title, subtitle, true, false);
+    const updateId = await updateTodo(todo, true);
     setCompleteTodoList((prev) => [...prev, todo]);
     setTodoList((prev) => prev.filter((curr) => curr.id !== updateId));
     return updateId;
@@ -59,7 +59,7 @@ const ListScreenContainer = () => {
   /** @description 미완료 처리하기 */
   async function inCompleteTodo(todo: TodoType) {
     const { id, title, subtitle } = todo;
-    const updateId = await updateTodo(id, title, subtitle, false, false);
+    const updateId = await updateTodo(todo, false);
     setTodoList((prev) => [...prev, todo]);
     setCompleteTodoList((prev) => prev.filter((curr) => curr.id !== updateId));
     return updateId;
