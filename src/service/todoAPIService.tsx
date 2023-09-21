@@ -1,6 +1,6 @@
 import axios from "axios";
 
-type BackTodoType = {
+export type BackTodoType = {
   id: number;
   title: string;
   description: string;

@@ -86,7 +86,7 @@ const ListScreen = (props: ListScreenProps) => {
   );
 };
 
-const TodoRow = (props: {
+export const TodoRow = (props: {
   text: string;
   active?: boolean;
   onCheck?: (active: boolean) => void;
@@ -117,7 +117,7 @@ const TodoRow = (props: {
   );
 };
 
-const CompliteRow = (props: {
+export const CompliteRow = (props: {
   text: string;
   onRemove?: () => void;
   onTodo?: () => void;
